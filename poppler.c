@@ -4501,7 +4501,8 @@ py_poppler_add_constants(PyObject *module, const gchar *strip_prefix)
   pyg_enum_add(module, "FormTextType", strip_prefix, POPPLER_TYPE_FORM_TEXT_TYPE);
   pyg_enum_add(module, "FormChoiceType", strip_prefix, POPPLER_TYPE_FORM_CHOICE_TYPE);
   pyg_enum_add(module, "Error", strip_prefix, POPPLER_TYPE_ERROR);
-  pyg_enum_add(module, "Orientation", strip_prefix, POPPLER_TYPE_ORIENTATION);
+  // 2018/05/24 poppler.c:4504:53: error: use of undeclared identifier 'POPPLER_TYPE_ORIENTATION'
+  // pyg_enum_add(module, "Orientation", strip_prefix, POPPLER_TYPE_ORIENTATION);
   pyg_enum_add(module, "PageTransitionType", strip_prefix, POPPLER_TYPE_PAGE_TRANSITION_TYPE);
   pyg_enum_add(module, "PageTransitionAlignment", strip_prefix, POPPLER_TYPE_PAGE_TRANSITION_ALIGNMENT);
   pyg_enum_add(module, "PageTransitionDirection", strip_prefix, POPPLER_TYPE_PAGE_TRANSITION_DIRECTION);

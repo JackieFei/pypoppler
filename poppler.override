@@ -1,0 +1,641 @@
+/* -*- Mode: C; c-basic-offset: 4 -*-
+ * Copyright (C) 2007-2008, Gian Mario Tagliaretti
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA 02110-1301, USA.
+ */
+
+%%
+headers
+#include <Python.h>
+#include "pygobject.h"
+#include <glib/poppler.h>
+#include <pycairo.h>
+#include "pypoppler-private.h"
+#ifndef POPPLER_TYPE_ACTION_ANY
+#define POPPLER_TYPE_ACTION_ANY (_poppler_action_any_get_type ())
+
+static GType _poppler_action_any_get_type (void)
+{
+    static GType our_type = 0;
+
+    if (our_type == 0)
+    {
+        our_type = g_boxed_type_register_static ("PopplerActionAny",
+                                                  (GBoxedCopyFunc)poppler_action_copy,
+                                                  (GBoxedFreeFunc)poppler_action_free);
+    }
+    return our_type;
+}
+#endif
+
+#ifndef POPPLER_TYPE_ACTION_GOTO_DEST
+#define POPPLER_TYPE_ACTION_GOTO_DEST (_poppler_action_goto_dest_get_type ())
+
+static GType _poppler_action_goto_dest_get_type (void)
+{
+    static GType our_type = 0;
+
+    if (our_type == 0)
+    {
+        our_type = g_boxed_type_register_static ("PopplerActionGotoDest",
+                                                  (GBoxedCopyFunc)poppler_action_copy,
+                                                  (GBoxedFreeFunc)poppler_action_free);
+    }
+    return our_type;
+}
+#endif
+
+#ifndef POPPLER_TYPE_ACTION_GOTO_DEST
+#define POPPLER_TYPE_ACTION_GOTO_DEST (_poppler_action_goto_dest_get_type ())
+
+static GType _poppler_action_goto_dest_get_type (void)
+{
+    static GType our_type = 0;
+
+    if (our_type == 0)
+    {
+        our_type = g_boxed_type_register_static ("PopplerActionGotoDest",
+                                                  (GBoxedCopyFunc)poppler_action_copy,
+                                                  (GBoxedFreeFunc)poppler_action_free);
+    }
+    return our_type;
+}
+#endif
+
+#ifndef POPPLER_TYPE_ACTION_GOTO_REMOTE
+#define POPPLER_TYPE_ACTION_GOTO_REMOTE (_poppler_action_goto_remote_get_type ())
+
+static GType _poppler_action_goto_remote_get_type (void)
+{
+    static GType our_type = 0;
+
+    if (our_type == 0)
+    {
+        our_type = g_boxed_type_register_static ("PopplerActionGotoRemote",
+                                                  (GBoxedCopyFunc)poppler_action_copy,
+                                                  (GBoxedFreeFunc)poppler_action_free);
+    }
+    return our_type;
+}
+#endif
+
+#ifndef POPPLER_TYPE_ACTION_LAUNCH
+#define POPPLER_TYPE_ACTION_LAUNCH (_poppler_action_launch_get_type ())
+
+static GType _poppler_action_launch_get_type (void)
+{
+    static GType our_type = 0;
+
+    if (our_type == 0)
+    {
+        our_type = g_boxed_type_register_static ("PopplerActionLaunch",
+                                                  (GBoxedCopyFunc)poppler_action_copy,
+                                                  (GBoxedFreeFunc)poppler_action_free);
+    }
+    return our_type;
+}
+#endif
+
+#ifndef POPPLER_TYPE_ACTION_URI
+#define POPPLER_TYPE_ACTION_URI (_poppler_action_uri_get_type ())
+
+static GType _poppler_action_uri_get_type (void)
+{
+    static GType our_type = 0;
+
+    if (our_type == 0)
+    {
+        our_type = g_boxed_type_register_static ("PopplerActionUri",
+                                                  (GBoxedCopyFunc)poppler_action_copy,
+                                                  (GBoxedFreeFunc)poppler_action_free);
+    }
+    return our_type;
+}
+#endif
+
+#ifndef POPPLER_TYPE_ACTION_NAMED
+#define POPPLER_TYPE_ACTION_NAMED (_poppler_action_named_get_type ())
+
+static GType _poppler_action_named_get_type (void)
+{
+    static GType our_type = 0;
+
+    if (our_type == 0)
+    {
+        our_type = g_boxed_type_register_static ("PopplerActionNamed",
+                                                  (GBoxedCopyFunc)poppler_action_copy,
+                                                  (GBoxedFreeFunc)poppler_action_free);
+    }
+    return our_type;
+}
+#endif
+
+#ifndef POPPLER_TYPE_ACTION_MOVIE
+#define POPPLER_TYPE_ACTION_MOVIE (_poppler_action_movie_get_type ())
+
+static GType _poppler_action_movie_get_type (void)
+{
+    static GType our_type = 0;
+
+    if (our_type == 0)
+    {
+        our_type = g_boxed_type_register_static ("PopplerActionMovie",
+                                                  (GBoxedCopyFunc)poppler_action_copy,
+                                                  (GBoxedFreeFunc)poppler_action_free);
+    }
+    return our_type;
+}
+#endif
+
+static PyObject *
+_poppler_action_to_poppler_action_typed (PopplerAction * action)
+{
+    if (!action)/*TODO: Should we raise an exception in this case?*/
+    {
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+
+    GType boxed_type;
+
+    switch (action->type)
+    {
+        case POPPLER_ACTION_NONE:/*TODO: Is this the right behaviour?*/
+            Py_INCREF(Py_None);
+            return Py_None;
+        case POPPLER_ACTION_GOTO_DEST:
+            boxed_type = POPPLER_TYPE_ACTION_GOTO_DEST;
+            break;
+        case POPPLER_ACTION_GOTO_REMOTE:
+            boxed_type = POPPLER_TYPE_ACTION_GOTO_REMOTE;
+            break;
+        case POPPLER_ACTION_LAUNCH:
+            boxed_type = POPPLER_TYPE_ACTION_LAUNCH;
+            break;
+        case POPPLER_ACTION_URI:
+            boxed_type = POPPLER_TYPE_ACTION_URI;
+            break;
+        case POPPLER_ACTION_NAMED:
+            boxed_type = POPPLER_TYPE_ACTION_NAMED;
+            break;
+        case POPPLER_ACTION_MOVIE:
+            boxed_type = POPPLER_TYPE_ACTION_MOVIE;
+            break;
+        default:
+            boxed_type = POPPLER_TYPE_ACTION_ANY;
+    }
+
+    return pyg_boxed_new (boxed_type, action, TRUE, TRUE);
+}
+
+
+extern Pycairo_CAPI_t *Pycairo_CAPI;
+
+static PyObject *
+_glist_to_pylist_objs (GList *source)
+{
+    GList *iter;
+    PyObject *dest = PyList_New (0);
+    for (iter = source; iter != NULL; iter = iter->next)
+    {
+        PyObject *item = pygobject_new ((GObject *)iter->data);
+        PyList_Append (dest, item);
+        Py_DECREF (item);
+    }
+    return dest;
+}
+
+static PyObject *
+_glist_to_pylist_boxed (GList *source, GType boxed_type)
+{
+    GList *iter;
+    PyObject *dest = PyList_New (0);
+    for (iter = source; iter != NULL; iter = iter->next)
+    {
+        PyObject *item = pyg_boxed_new (boxed_type, iter->data,
+                                        TRUE, TRUE);
+        PyList_Append (dest, item);
+        Py_DECREF (item);
+    }
+    return dest;
+}
+
+%%
+init
+
+%%
+modulename poppler
+%%
+import gobject.GObject as PyGObject_Type
+%%
+ignore
+poppler_page_free_link_mapping
+poppler_page_free_image_mapping
+poppler_page_free_form_field_mapping
+poppler_page_free_annot_mapping
+%%
+ignore-glob
+  *_get_type
+  _*
+  *_copy
+  *_free
+%%
+override poppler_document_get_attachments noargs
+static PyObject *
+_wrap_poppler_document_get_attachments(PyGObject *self)
+{
+    GList           *item_list;
+    PyObject        *ret;
+
+    item_list = poppler_document_get_attachments(POPPLER_DOCUMENT(self->obj));
+    ret = _glist_to_pylist_objs(item_list);
+    g_list_free(item_list);
+    return ret;
+}
+%%
+override poppler_page_find_text kwargs
+static PyObject *
+_wrap_poppler_page_find_text(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char     *kwlist[] = { "text", NULL };
+    const gchar     *text;
+    GList           *item_list;
+    PyObject        *ret;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+                                     "s",
+                                     kwlist,
+                                     &text)) {
+        return NULL;
+    }
+
+    item_list = poppler_page_find_text(POPPLER_PAGE(self->obj), text);
+    ret = _glist_to_pylist_boxed(item_list, POPPLER_TYPE_RECTANGLE);
+    g_list_free(item_list);
+    return ret;
+}
+%%
+override poppler_page_get_size noargs
+static PyObject *
+_wrap_poppler_page_get_size(PyGObject *self)
+{
+    double      width;
+    double      height;
+
+    poppler_page_get_size(POPPLER_PAGE(self->obj), &width, &height);
+
+    return Py_BuildValue("dd", width, height);
+}
+%%
+override poppler_font_info_scan kwargs
+static PyObject *
+_wrap_poppler_font_info_scan(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char         *kwlist[] = { "n_pages", NULL };
+    int                 n_pages;
+    PopplerFontsIter    *fonts_iter;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+                                     "i",
+                                     kwlist,
+                                     &n_pages)) {
+        return NULL;
+    }
+
+    poppler_font_info_scan (POPPLER_FONT_INFO(self->obj), n_pages, &fonts_iter);
+
+    return pyg_boxed_new(POPPLER_TYPE_FONTS_ITER, fonts_iter, TRUE, TRUE);
+}
+%%
+override poppler_page_get_thumbnail_size noargs
+static PyObject *
+_wrap_poppler_page_get_thumbnail_size(PyGObject *self)
+{
+    int                 width, height;
+
+    poppler_page_get_thumbnail_size (POPPLER_PAGE(self->obj), &width, &height);
+
+    return Py_BuildValue("ii", width, height);
+}
+%%
+override poppler_page_get_link_mapping noargs
+static PyObject *
+_wrap_poppler_page_get_link_mapping(PyGObject *self)
+{
+    GList           *item_list;
+    PyObject        *ret;
+
+    item_list = poppler_page_get_link_mapping(POPPLER_PAGE(self->obj));
+    ret = _glist_to_pylist_boxed(item_list, POPPLER_TYPE_LINK_MAPPING);
+    poppler_page_free_link_mapping(item_list);
+    return ret;
+}
+%%
+override poppler_page_get_image_mapping noargs
+static PyObject *
+_wrap_poppler_page_get_image_mapping(PyGObject *self)
+{
+    GList           *item_list;
+    PyObject        *ret;
+
+    item_list = poppler_page_get_image_mapping(POPPLER_PAGE(self->obj));
+    ret = _glist_to_pylist_boxed(item_list, POPPLER_TYPE_IMAGE_MAPPING);
+    poppler_page_free_image_mapping(item_list);
+    return ret;
+}
+%%
+override poppler_page_get_form_field_mapping noargs
+static PyObject *
+_wrap_poppler_page_get_form_field_mapping(PyGObject *self)
+{
+    GList           *item_list;
+    PyObject        *ret;
+
+    item_list = poppler_page_get_form_field_mapping(POPPLER_PAGE(self->obj));
+    ret = _glist_to_pylist_boxed(item_list, POPPLER_TYPE_FORM_FIELD_MAPPING);
+    poppler_page_free_form_field_mapping(item_list);
+    return ret;
+}
+%%
+override poppler_page_get_annot_mapping noargs
+static PyObject *
+_wrap_poppler_page_get_annot_mapping(PyGObject *self)
+{
+    GList           *item_list;
+    PyObject        *ret;
+
+    item_list = poppler_page_get_annot_mapping(POPPLER_PAGE(self->obj));
+    ret = _glist_to_pylist_boxed(item_list, POPPLER_TYPE_ANNOT_MAPPING);
+    poppler_page_free_annot_mapping(item_list);
+    return ret;
+}
+%%
+override poppler_page_get_selection_region kwargs
+static PyObject *
+_wrap_poppler_page_get_selection_region(PyGObject *self,
+                                        PyObject *args,
+                                        PyObject *kwargs)
+{
+    static char             *kwlist[] = { "scale", "style", "selection", NULL };
+    double                  scale;
+    PopplerSelectionStyle   style;
+    PopplerRectangle        *selection;
+    GList                   *item_list;
+    PyObject                *ret;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+                                     "diO:Page.get_selection_region", kwlist,
+                                     &scale, &style, &selection)) {
+        return NULL;
+    }
+
+    item_list = poppler_page_get_selection_region(POPPLER_PAGE(self->obj),
+                                                  scale, style, selection);
+    ret = _glist_to_pylist_boxed(item_list, POPPLER_TYPE_RECTANGLE);
+    g_list_free(item_list);
+    return ret;
+}
+%%
+override-attr PopplerRectangle.x1
+static int
+_wrap_poppler_rectangle__set_x1(PyGBoxed *self, PyObject *value, void *closure)
+{
+    double val;
+
+    val = PyFloat_AsDouble(value);
+    if (PyErr_Occurred())
+        return -1;
+    pyg_boxed_get(self, PopplerRectangle)->x1 = val;
+    return 0;
+}
+%%
+override-attr PopplerRectangle.x2
+static int
+_wrap_poppler_rectangle__set_x2(PyGBoxed *self, PyObject *value, void *closure)
+{
+    double val;
+
+    val = PyFloat_AsDouble(value);
+    if (PyErr_Occurred())
+        return -1;
+    pyg_boxed_get(self, PopplerRectangle)->x2 = val;
+    return 0;
+}
+%%
+override-attr PopplerRectangle.y1
+static int
+_wrap_poppler_rectangle__set_y1(PyGBoxed *self, PyObject *value, void *closure)
+{
+    double val;
+
+    val = PyFloat_AsDouble(value);
+    if (PyErr_Occurred())
+        return -1;
+    pyg_boxed_get(self, PopplerRectangle)->y1 = val;
+    return 0;
+}
+%%
+override-attr PopplerRectangle.y2
+static int
+_wrap_poppler_rectangle__set_y2(PyGBoxed *self, PyObject *value, void *closure)
+{
+    double val;
+
+    val = PyFloat_AsDouble(value);
+    if (PyErr_Occurred())
+        return -1;
+    pyg_boxed_get(self, PopplerRectangle)->y2 = val;
+    return 0;
+}
+%%
+override-attr PopplerColor.red
+static int
+_wrap_poppler_color__set_red(PyGBoxed *self, PyObject *value, void *closure)
+{
+    guint16 val;
+
+    val = PyInt_AsLong(value);
+    if (PyErr_Occurred())
+        return -1;
+
+    pyg_boxed_get(self, PopplerColor)->red = val;
+    return 0;
+}
+%%
+override-attr PopplerColor.green
+static int
+_wrap_poppler_color__set_green(PyGBoxed *self, PyObject *value, void *closure)
+{
+    guint16 val;
+
+    val = PyInt_AsLong(value);
+    if (PyErr_Occurred())
+        return -1;
+
+    pyg_boxed_get(self, PopplerColor)->green = val;
+    return 0;
+}
+%%
+override-attr PopplerColor.blue
+static int
+_wrap_poppler_color__set_blue(PyGBoxed *self, PyObject *value, void *closure)
+{
+    guint16 val;
+
+    val = PyInt_AsLong(value);
+    if (PyErr_Occurred())
+        return -1;
+
+    pyg_boxed_get(self, PopplerColor)->blue = val;
+    return 0;
+}
+%%
+override poppler_action_get_typed_action noargs
+static PyObject *
+_wrap_poppler_action_get_typed_action(PyGBoxed *self)
+{
+    return _poppler_action_to_poppler_action_typed(pyg_boxed_get(self, PopplerAction));
+}
+%%
+override-attr PopplerLinkMapping.action
+static PyObject *
+_wrap_poppler_link_mapping__get_action(PyGBoxed * self, void *closure)
+{
+    PopplerLinkMapping * lm = pyg_boxed_get(self, PopplerLinkMapping);
+
+    if (lm)
+    {
+        return _poppler_action_to_poppler_action_typed(lm->action);
+    }
+
+    Py_INCREF(Py_None);/*TODO: Should we raise an exception in this case?*/
+    return Py_None;
+}
+%%
+override poppler_index_iter_get_action noargs
+static PyObject *
+_wrap_poppler_index_iter_get_action(PyGBoxed *self)
+{
+    PopplerIndexIter * it = pyg_boxed_get(self, PopplerIndexIter);
+
+    if (it)
+    {
+        return _poppler_action_to_poppler_action_typed(poppler_index_iter_get_action(it));
+    }
+
+    Py_INCREF(Py_None);/*TODO: Should we raise an exception in this case?*/
+    return Py_None;
+}
+%%
+override poppler_page_get_thumbnail noargs
+static PyObject *
+_wrap_poppler_page_get_thumbnail(PyGObject *self,
+                                 PyObject *args,
+                                 PyObject *kwargs)
+{
+    cairo_surface_t * surface;
+
+    surface = poppler_page_get_thumbnail(POPPLER_PAGE(self->obj));
+
+#if PYCAIRO_VERSION_HEX >= 0x1010600
+    return PycairoSurface_FromSurface(surface, NULL);
+#else
+    return PycairoSurface_FromSurface(surface, NULL, NULL);
+#endif
+}
+%%
+override poppler_page_get_image kwargs
+static PyObject *
+_wrap_poppler_page_get_image(PyGObject *self,
+                             PyObject *args,
+                             PyObject *kwargs)
+{
+    static char     *kwlist[] = { "image_id", NULL };
+    gint            image_id;
+    cairo_surface_t *surface;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+                                     "i:Page.get_image", kwlist,
+                                     &image_id)) {
+        return NULL;
+    }
+
+    surface = poppler_page_get_image(POPPLER_PAGE(self->obj), image_id);
+
+#if PYCAIRO_VERSION_HEX >= 0x1010600
+    return PycairoSurface_FromSurface(surface, NULL);
+#else
+    return PycairoSurface_FromSurface(surface, NULL, NULL);
+#endif
+}
+%%
+override poppler_page_render_to_pixbuf kwargs
+static PyObject *
+_wrap_poppler_page_render_to_pixbuf(PyGObject *self,
+                                    PyObject *args,
+                                    PyObject *kwargs)
+{
+    static char *kwlist[] = { "src_x", "src_y", "src_width",
+                              "src_height", "scale", "rotation", NULL };
+    int src_x, src_y, src_width, src_height, rotation;
+    double scale;
+    GdkPixbuf *pixbuf = NULL;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+                                     "iiiidi:Poppler.Page.render_to_pixbuf",
+                                     kwlist, &src_x, &src_y, &src_width,
+                                     &src_height, &scale, &rotation))
+        return NULL;
+
+    pyg_begin_allow_threads;
+
+    poppler_page_render_to_pixbuf(POPPLER_PAGE(self->obj), src_x, src_y,
+                                  src_width, src_height, scale,
+                                  rotation, pixbuf);
+
+    pyg_end_allow_threads;
+
+    return pygobject_new((GObject *)pixbuf);
+}
+%%
+override poppler_page_render_to_pixbuf_for_printing kwargs
+static PyObject *
+_wrap_poppler_page_render_to_pixbuf_for_printing(PyGObject *self,
+                                                 PyObject *args,
+                                                 PyObject *kwargs)
+{
+    static char *kwlist[] = { "src_x", "src_y", "src_width",
+                              "src_height", "scale", "rotation", NULL };
+    int src_x, src_y, src_width, src_height, rotation;
+    double scale;
+    GdkPixbuf *pixbuf = NULL;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+                                     "iiiidi:Poppler.Page.render_to_pixbuf_for_printing",
+                                     kwlist, &src_x, &src_y, &src_width,
+                                     &src_height, &scale, &rotation))
+        return NULL;
+
+    pyg_begin_allow_threads;
+
+    poppler_page_render_to_pixbuf_for_printing(POPPLER_PAGE(self->obj),
+                                               src_x, src_y, src_width,
+                                               src_height, scale,
+                                               rotation, pixbuf);
+
+    pyg_end_allow_threads;
+
+    return pygobject_new((GObject *)pixbuf);
+}

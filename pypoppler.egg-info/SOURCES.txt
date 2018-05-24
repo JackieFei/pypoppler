@@ -1,0 +1,14 @@
+MANIFEST.in
+README
+configure.ac
+poppler.c
+poppler.defs
+poppler.override
+popplermodule.c
+pypoppler-private.h
+setup.cfg
+setup.py
+pypoppler.egg-info/PKG-INFO
+pypoppler.egg-info/SOURCES.txt
+pypoppler.egg-info/dependency_links.txt
+pypoppler.egg-info/top_level.txt

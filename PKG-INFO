@@ -1,0 +1,23 @@
+Metadata-Version: 1.1
+Name: pypoppler
+Version: 0.12.2
+Summary: Python bindings for poppler-glib, unofficial branch including bug fixes, and removal of gtk dependencies
+Home-page: https://code.launchpad.net/~mriedesel/poppler-python/main
+Author: Mark Riedesel
+Author-email: mark@klowner.com
+License: GPLv2
+Description: UNKNOWN
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Environment :: Console
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: GNU General Public License v2 (GPLv2)
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Scheme
+Classifier: Programming Language :: C
+Classifier: Operating System :: POSIX
+Classifier: Topic :: Multimedia :: Graphics
+Requires: PyGObject (>=2.28.3)
+Requires: pycairo (>=1.10.0)
